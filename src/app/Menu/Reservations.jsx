@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
-import { ReactDOM } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import ReservationModal from "../../components/Modal/ReservationModal";
+import ReceiptPreviewModal from "../../components/Modal/ReceiptPreviewModal";
 import Receipt from "../../components/Receipt";
-import ReactToPdf from "react-to-pdf";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 function Reservations() {
   const [reservations, setReservations] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [receiptPreviewIsOpen, setReceiptPreviewIsOpen] = useState(false); // State variable for receipt preview modal
+  const [receiptData, setReceiptData] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
     nomor_pemesanan: "",
@@ -32,9 +31,6 @@ function Reservations() {
       },
     ],
   });
-
-  const [pdfData, setPdfData] = useState("");
-  const pdfRef = useRef(null); // Initialize pdfRef with null
 
   useEffect(() => {
     // Fetch reservations from your API
@@ -103,77 +99,58 @@ function Reservations() {
 
   const handlePrintClick = async (id) => {
     try {
-      // Fetch the reservation data
-      const reservationResponse = await axios.get(
+      if (!id) {
+        console.error("Reservation ID is undefined or null.");
+        return;
+      }
+
+      const response = await axios.get(
         `http://localhost:8000/pemesanan/print/${id}`
       );
-      const reservationData = reservationResponse.data;
-
-      // Create a new jsPDF instance
-      const doc = new jsPDF();
-
-      // Create a temporary div element
-      const tempDiv = document.createElement("div");
-      document.body.appendChild(tempDiv);
-
-      // Render the Receipt component into the temporary div
-      ReactDOM.render(<Receipt data={reservationData} />, tempDiv);
-
-      // Convert the HTML content to a canvas
-      const canvas = await html2canvas(tempDiv, {
-        scale: 2, // You can adjust the scale for better quality
-      });
-
-      // Remove the temporary div from the DOM
-      document.body.removeChild(tempDiv);
-
-      // Add the canvas image to the PDF
-      const imgData = canvas.toDataURL("image/png");
-      doc.addImage(imgData, "PNG", 10, 10);
-
-      // Save or open the PDF
-      doc.save("hotel_reservation_receipt.pdf");
+      setReceiptData(response.data);
+      setReceiptPreviewIsOpen(true); // Open the receipt preview modal
     } catch (error) {
-      console.error("Error fetching or generating PDF:", error);
+      console.error(error);
     }
   };
 
-  const TableRow = ({ data }) => (
-    <tr key={data.id}>
-      {Object.keys(data).map((key, index) => (
-        <td key={index} className="px-6 py-4 whitespace-nowrap">
-          {data[key]}
+  const TableRow = ({ data }) => {
+    return (
+      <tr key={data.id}>
+        {Object.keys(data).map((key, index) => (
+          <td key={index} className="px-6 py-4 whitespace-nowrap">
+            {data[key]}
+          </td>
+        ))}
+        <td className="px-6 py-4 whitespace-nowrap">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
+            onClick={() => handlePrintClick(data.id)} // Pass the reservation ID
+          >
+            Print
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2"
+            onClick={handleCreateClick}
+          >
+            Create
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
+            onClick={() => handleEditClick(data)}
+          >
+            Edit
+          </button>
+          <button
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md"
+            onClick={() => handleDeleteClick(data.id)}
+          >
+            Delete
+          </button>
         </td>
-      ))}
-      <td className="px-6 py-4 whitespace-nowrap">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
-          onClick={() => handlePrintClick(data.id)}
-        >
-          Print
-        </button>
-        <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2"
-          onClick={handleCreateClick}
-        >
-          Create
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
-          onClick={() => handleEditClick(data)}
-        >
-          Edit
-        </button>
-        <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md"
-          onClick={() => handleDeleteClick(data.id)}
-        >
-          Delete
-        </button>
-      </td>
-    </tr>
-  );
-
+      </tr>
+    );
+  };
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -208,6 +185,7 @@ function Reservations() {
               </tbody>
             </table>
           </div>
+
           <ReservationModal
             isOpen={modalIsOpen}
             closeModal={() => setModalIsOpen(false)}
@@ -216,6 +194,11 @@ function Reservations() {
             handleSubmit={handleSubmit}
           />
         </div>
+        <ReceiptPreviewModal
+          isOpen={receiptPreviewIsOpen}
+          closeModal={() => setReceiptPreviewIsOpen(false)}
+          receiptData={receiptData}
+        />
       </main>
     </div>
   );
