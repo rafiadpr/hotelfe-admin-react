@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   FaHome,
   FaCalendarAlt,
@@ -8,13 +8,64 @@ import {
   FaUser,
   FaSignOutAlt,
 } from "react-icons/fa";
+import Cookies from "js-cookie";
+
+const listNav = [
+  {
+    role: "Admin",
+    list: [
+      {
+        value: "Home & Add Reservations",
+        href: "/HomeAdmin",
+        icon: <FaHome className="text-gray-500" />,
+      },
+      {
+        value: "Reservations",
+        href: "/Reservations",
+        icon: <FaCalendarAlt className="text-gray-500" />,
+      },
+      {
+        value: "Room",
+        href: "/Rooms",
+        icon: <FaBed className="text-gray-500" />,
+      },
+      {
+        value: "Room Type",
+        href: "/RoomType",
+        icon: <FaThLarge className="text-gray-500" />,
+      },
+      {
+        value: "User",
+        href: "/User",
+        icon: <FaUser className="text-gray-500" />,
+      },
+    ],
+  },
+  {
+    role: "Resepsionis",
+    list: [
+      {
+        value: "Home & Add Reservations",
+        href: "/HomeResepsionis",
+        icon: <FaHome className="text-gray-500" />,
+      },
+      {
+        value: "Reservations",
+        href: "/Reservations",
+        icon: <FaCalendarAlt className="text-gray-500" />,
+      },
+    ],
+  },
+];
 
 const Sidebar = () => {
+  const role = Cookies.get("role");
+  const filteredNav = listNav.filter((item) => item.role === role);
+
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.removeItem("logged");
-    localStorage.removeItem("admin");
-    localStorage.removeItem("token");
+    Cookies.remove("jwtToken");
+    Cookies.remove("role");
     navigate("/");
   };
   return (
@@ -22,50 +73,25 @@ const Sidebar = () => {
       <div className="p-4">
         <h1 className="text-2xl font-bold text-gray-800">Hotel Admin</h1>
       </div>
-      <ul>
-        <a
-          className="p-4 hover:bg-gray-200 flex items-center space-x-2"
-          href="/HomeAdmin"
-        >
-          <FaHome className="text-gray-500" />
-          <span>Home & Add Reservations</span>
-        </a>
-        <a
-          className="p-4 hover:bg-gray-200 flex items-center space-x-2"
-          href="/Reservations"
-        >
-          <FaCalendarAlt className="text-gray-500" />
-          <span>Reservations</span>
-        </a>
-        <a
-          className="p-4 hover:bg-gray-200 flex items-center space-x-2"
-          href="/Rooms"
-        >
-          <FaBed className="text-gray-500" />
-          <span>Room</span>
-        </a>
-        <a
-          className="p-4 hover:bg-gray-200 flex items-center space-x-2"
-          href="/RoomType"
-        >
-          <FaThLarge className="text-gray-500" />
-          <span>Room Type</span>
-        </a>
-        <a
-          className="p-4 hover:bg-gray-200 flex items-center space-x-2"
-          href="/User"
-        >
-          <FaUser className="text-gray-500" />
-          <span>User</span>
-        </a>
-        <a
+      <div>
+        {filteredNav[0].list.map((item) => (
+          <Link
+            className="p-4 hover:bg-gray-200 flex items-center space-x-2"
+            to={item.href}
+          >
+            {item.icon}
+            <span>{item.value}</span>
+          </Link>
+        ))}
+        <Link
+          to="/"
           className="p-4 hover:bg-gray-200 flex items-center space-x-2"
           onClick={handleLogout}
         >
           <FaSignOutAlt className="text-gray-500" />
           <span>Logout</span>
-        </a>
-      </ul>
+        </Link>
+      </div>
     </nav>
   );
 };

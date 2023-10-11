@@ -1,13 +1,32 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, EyeOff } from "react-feather";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import Cookies from "js-cookie";
+import { BeatLoader } from "react-spinners";
 
 const Login = () => {
   const navigate = useNavigate(); // Get the navigate function
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const role = Cookies.get("role");
+
+    switch (role) {
+      case "Admin":
+        navigate("/HomeAdmin");
+        break;
+      case "Resepsionis":
+        navigate("/HomeResepsionis");
+        break;
+      default:
+        navigate("/");
+        break;
+    }
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,32 +57,68 @@ const Login = () => {
     const { email, password } = formData;
 
     try {
-      const response = await axios.post("http://localhost:8000/auth/login", {
-        email,
-        password,
-      });
-      console.log(response.data);
+      setIsLoading(true);
+      await axios
+        .post("http://localhost:8000/auth/login", {
+          email,
+          password,
+        })
+        .then((res) => {
+          console.log(res.data);
+          const token = res.data.token;
+          const role = res.data.data.role;
 
-      if (response.data.logged) {
-        localStorage.setItem("logged", response.data.logged);
-        localStorage.setItem("user", JSON.stringify(response.data.data));
-        localStorage.setItem("token", response.data.token);
+          if (token && role) {
+            Cookies.set("jwtToken", token);
+            Cookies.set("role", role);
 
-        if (response.data.data.role === "Admin") {
-          navigate("/HomeAdmin"); // Use navigate to navigate to the Admin page
-        } else if (response.data.data.role === "Resepsionis") {
-          navigate("/ResepsionisResepsionis"); // Use navigate to navigate to the Resepsionis page
-        }
-
-        handleLogin();
-      } else {
-        console.log("LOGIN GAGAL");
-        handleLoginFailed();
-      }
+            switch (role) {
+              case "Admin":
+                navigate("/HomeAdmin");
+                break;
+              case "Resepsionis":
+                navigate("/HomeResepsionis");
+                break;
+              default:
+                navigate("/");
+                break;
+            }
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } catch (error) {
       console.log(error);
-      handleLoginFailed();
     }
+
+    // try {
+    //   const response = await axios.post("http://localhost:8000/auth/login", {
+    //     email,
+    //     password,
+    //   });
+    //   console.log(response.data);
+
+    //   if (response.data.logged) {
+    //     localStorage.setItem("logged", response.data.logged);
+    //     localStorage.setItem("user", JSON.stringify(response.data.data));
+    //     localStorage.setItem("token", response.data.token);
+
+    //     if (response.data.data.role === "Admin") {
+    //       navigate("/HomeAdmin"); // Use navigate to navigate to the Admin page
+    //     } else if (response.data.data.role === "Resepsionis") {
+    //       navigate("/ResepsionisResepsionis"); // Use navigate to navigate to the Resepsionis page
+    //     }
+
+    //     handleLogin();
+    //   } else {
+    //     console.log("LOGIN GAGAL");
+    //     handleLoginFailed();
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    //   handleLoginFailed();
+    // }
   };
 
   return (
@@ -116,12 +171,19 @@ const Login = () => {
               </button>
             </div>
           </div>
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Log In
-          </button>
+
+          {isLoading ? (
+            <div className="w-full flex justify-center">
+              <BeatLoader color="blue" />
+            </div>
+          ) : (
+            <button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+            >
+              Log In
+            </button>
+          )}
         </form>
       </div>
     </div>

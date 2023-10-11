@@ -40,7 +40,20 @@ function RoomModal({
           <form>
             {renderInputField("Nomor Kamar", "nomor_kamar")}
             {renderInputField("ID Tipe Kamar", "id_tipe_kamar")}
-            {renderInputField("Tersedia", "tersedia")}
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2">Tersedia:</label>
+              <select
+                id="tersedia"
+                name="tersedia"
+                className="border p-2 text-gray-600"
+                value={formData.tersedia}
+                onChange={handleChange}
+              >
+                <option value="">Select Status</option>
+                <option value="Admin">Tersedia</option>
+                <option value="Resepsionis">Tidak Tersedia</option>
+              </select>
+            </div>
             <div className="mb-4">
               <button
                 className={`${

@@ -7,8 +7,26 @@ function RoomTypeModal({
   setFormData,
   handleSubmit,
   isCreating,
+  user, // Make sure the user data is passed as a prop
 }) {
   const [imageUrl, setImageUrl] = useState(""); // State to store the image URL
+  const [users, setUsers] = useState([])
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/user");
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     // When the component mounts or formData.foto changes, update the image URL
@@ -79,7 +97,21 @@ function RoomTypeModal({
             {renderInputField("Nama User", "nama_user")}
             {renderInputField("Email", "email")}
             {renderInputField("Password", "password")}
-            {renderInputField("Role", "role")}
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2">Role:</label>
+              <select
+                id="role"
+                name="role"
+                className="border p-2 text-gray-600"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="">Select Role</option>
+                <option value="Admin">Admin</option>
+                <option value="Resepsionis">Resepsionis</option>
+              </select>
+            </div>
+            
             <div className="mb-4">
               <label className="block text-sm font-bold mb-2">Foto:</label>
               <input

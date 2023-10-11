@@ -4,6 +4,7 @@ import Sidebar from "../../components/Sidebar";
 import ReservationModal from "../../components/Modal/ReservationModal";
 import ReceiptPreviewModal from "../../components/Modal/ReceiptPreviewModal";
 import Receipt from "../../components/Receipt";
+import debounce from "lodash.debounce";
 
 function Reservations() {
   const [reservations, setReservations] = useState([]);
@@ -31,6 +32,8 @@ function Reservations() {
       },
     ],
   });
+  const [searchQuery, setSearchQuery] = useState(""); // State variable for search input
+  const debouncedSearch = debounce((query) => setSearchQuery(query));
 
   useEffect(() => {
     // Fetch reservations from your API
@@ -38,24 +41,6 @@ function Reservations() {
       setReservations(response.data);
     });
   }, []);
-
-  const handleCreateClick = () => {
-    setFormData({
-      ...formData,
-      nomor_pemesanan: "",
-      nama_pemesan: "",
-      email_pemesan: "",
-      tgl_pemesanan: new Date().toISOString(),
-      tgl_check_in: "",
-      tgl_check_out: "",
-      nama_tamu: "",
-      jumlah_kamar: "",
-      id_tipe_kamar: "",
-      id_user: "1",
-      status_pemesanan: "",
-    });
-    setModalIsOpen(true);
-  };
 
   const handleEditClick = (reservation) => {
     setFormData(reservation);
@@ -130,12 +115,6 @@ function Reservations() {
             Print
           </button>
           <button
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2"
-            onClick={handleCreateClick}
-          >
-            Create
-          </button>
-          <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
             onClick={() => handleEditClick(data)}
           >
@@ -151,12 +130,22 @@ function Reservations() {
       </tr>
     );
   };
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <main className="flex-1 p-4">
         <div className="container mx-auto p-4">
           <div className="overflow-x-auto">
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Enter your reservation ID"
+                value={searchQuery}
+                onChange={(e) => debouncedSearch(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-1/2"
+              />
+            </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -179,9 +168,16 @@ function Reservations() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {reservations.map((reservation) => (
-                  <TableRow key={reservation.id} data={reservation} />
-                ))}
+                {reservations
+                  .filter((reservation) =>
+                    Object.values(reservation)
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )
+                  .map((reservation) => (
+                    <TableRow key={reservation.id} data={reservation} />
+                  ))}
               </tbody>
             </table>
           </div>

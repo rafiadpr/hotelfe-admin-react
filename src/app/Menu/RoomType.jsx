@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import RoomTypeModal from "../../components/Modal/RoomTypeModal";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import debounce from "lodash.debounce";
 
 function RoomType() {
   const [roomType, setRoomType] = useState([]);
@@ -13,8 +16,17 @@ function RoomType() {
     deskripsi: "",
     foto: null, // Use null initially for the image file
   });
+  const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState(""); // State variable for search input
+  const debouncedSearch = debounce((query) => setSearchQuery(query));
 
   useEffect(() => {
+    const role = Cookies.get("role");
+
+    if (role !== "Admin") {
+      navigate("/404");
+    }
     // Fetch roomType from your API
     axios.get("http://localhost:8000/tipekamar").then((response) => {
       setRoomType(response.data);
@@ -61,7 +73,7 @@ function RoomType() {
     formDataToSend.append("harga", formData.harga);
     formDataToSend.append("deskripsi", formData.deskripsi);
     formDataToSend.append("foto", formData.foto); // Append the image file
-  
+
     // Send a POST request to create a new roomType
     if (!formData.id) {
       axios.post("http://localhost:8000/tipekamar", formDataToSend).then(() => {
@@ -73,20 +85,23 @@ function RoomType() {
       });
     } else {
       // Send a PUT request to update the roomType
-      axios.put(`http://localhost:8000/tipekamar/${formData.id}`, formDataToSend)
-      .then(() => {
-        setModalIsOpen(false);
-        // Update the formData object if needed
-        setFormData({ ...formData, ...formDataToSend });
-        // Update the roomType list if needed
-        setRoomType((prevRoomType) =>
-          prevRoomType.map((roomTypeItem) =>
-            roomTypeItem.id === formData.id ? { ...roomTypeItem, ...formData } : roomTypeItem
-          )
-        );
-      });
+      axios
+        .put(`http://localhost:8000/tipekamar/${formData.id}`, formDataToSend)
+        .then(() => {
+          setModalIsOpen(false);
+          // Update the formData object if needed
+          setFormData({ ...formData, ...formDataToSend });
+          // Update the roomType list if needed
+          setRoomType((prevRoomType) =>
+            prevRoomType.map((roomTypeItem) =>
+              roomTypeItem.id === formData.id
+                ? { ...roomTypeItem, ...formData }
+                : roomTypeItem
+            )
+          );
+        });
     }
-  };  
+  };
 
   const TableRow = ({ data }) => (
     <tr key={data.id}>
@@ -139,6 +154,15 @@ function RoomType() {
       <main className="flex-1 p-4">
         <div className="container mx-auto p-4">
           <div className="overflow-x-auto">
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Enter your field"
+                value={searchQuery}
+                onChange={(e) => debouncedSearch(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-1/2"
+              />
+            </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -161,9 +185,16 @@ function RoomType() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {roomType.map((roomType) => (
-                  <TableRow key={roomType.id} data={roomType} />
-                ))}
+              {roomType
+                  .filter((roomType) =>
+                    Object.values(roomType)
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )
+                  .map((roomType) => (
+                    <TableRow key={roomType.id} data={roomType} />
+                  ))}
               </tbody>
             </table>
           </div>

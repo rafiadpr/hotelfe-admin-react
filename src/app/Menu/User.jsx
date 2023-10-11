@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import UserModal from "../../components/Modal/UserModal"; // Import the separate modal component
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import debounce from "lodash.debounce";
 
 function User() {
   const [user, setUser] = useState([]);
@@ -14,8 +17,18 @@ function User() {
     password: "",
     role: "",
   });
+  const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState(""); // State variable for search input
+  const debouncedSearch = debounce((query) => setSearchQuery(query));
 
   useEffect(() => {
+    const role = Cookies.get("role");
+
+    if (role !== "Admin") {
+      navigate("/404");
+    }
+
     // Fetch user from your API
     axios.get("http://localhost:8000/user").then((response) => {
       setUser(response.data);
@@ -75,43 +88,48 @@ function User() {
       });
     } else {
       // Send a PUT request to update the user
-      axios.put(`http://localhost:8000/user/${formData.id}`, formDataToSend)
-      .then(() => {
-        setModalIsOpen(false);
-        // Update the formData object if needed
-        setFormData({ ...formData, ...formDataToSend });
-        // Update the user list if needed
-        setUser((prevUser) =>
-          prevUser.map((userItem) =>
-            userItem.id === formData.id ? { ...userItem, ...formData } : userItem
-          )
-        );
-      });
+      axios
+        .put(`http://localhost:8000/user/${formData.id}`, formDataToSend)
+        .then(() => {
+          setModalIsOpen(false);
+          // Update the formData object if needed
+          setFormData({ ...formData, ...formDataToSend });
+          // Update the user list if needed
+          setUser((prevUser) =>
+            prevUser.map((userItem) =>
+              userItem.id === formData.id
+                ? { ...userItem, ...formData }
+                : userItem
+            )
+          );
+        });
     }
   };
 
   const TableRow = ({ data }) => (
     <tr key={data.id}>
-      {Object.keys(data).map((key, index) => {
-        if (key === "foto") {
-          // Render the image if the key is 'foto'
-          return (
-            <td key={index} className="px-6 py-4 whitespace-nowrap">
-              <img
-                src={`http://localhost:8000/user/uploads/${data[key]}`} // Adjust the image path based on your backend
-                alt={data[key]}
-                width="100" // Adjust the width as needed
-              />
-            </td>
-          );
-        } else {
-          return (
-            <td key={index} className="px-6 py-4 whitespace-nowrap">
-              {data[key]}
-            </td>
-          );
-        }
-      })}
+      {Object.keys(data)
+        .filter((key) => key !== "password")
+        .map((key, index) => {
+          if (key === "foto") {
+            // Render the image if the key is 'foto'
+            return (
+              <td key={index} className="px-6 py-4 whitespace-nowrap">
+                <img
+                  src={`http://localhost:8000/user/uploads/${data[key]}`} // Adjust the image path based on your backend
+                  alt={data[key]}
+                  width="100" // Adjust the width as needed
+                />
+              </td>
+            );
+          } else {
+            return (
+              <td key={index} className="px-6 py-4 whitespace-nowrap">
+                {data[key]}
+              </td>
+            );
+          }
+        })}
       <td className="px-6 py-4 whitespace-nowrap">
         <button
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2"
@@ -141,11 +159,20 @@ function User() {
       <main className="flex-1 p-4">
         <div className="container mx-auto p-4">
           <div className="overflow-x-auto">
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Enter your field"
+                value={searchQuery}
+                onChange={(e) => debouncedSearch(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-1/2"
+              />
+            </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
                   {user.length > 0 &&
-                    Object.keys(user[0])?.map((header, index) => (
+                    Object.keys(user[0])?.filter((key) => key !== "password").map((header, index) => (
                       <th
                         key={index}
                         scope="col"
@@ -163,9 +190,16 @@ function User() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {user.map((user) => (
-                  <TableRow key={user.id} data={user} />
-                ))}
+                {user
+                  .filter((user) =>
+                    Object.values(user)
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )
+                  .map((user) => (
+                    <TableRow key={user.id} data={user} />
+                  ))}
               </tbody>
             </table>
           </div>

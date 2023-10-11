@@ -9,6 +9,7 @@ import Reservations from "./app/Menu/Reservations";
 import Rooms from "./app/Menu/Rooms";
 import RoomType from "./app/Menu/RoomType";
 import User from "./app/Menu/User";
+import NotFound from "./app/NotFound";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/Rooms" element={<Rooms />} />
           <Route path="/RoomType" element={<RoomType />} />
           <Route path="/User" element={<User />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         {/* Only display Login on the homepage */}
         <Routes>

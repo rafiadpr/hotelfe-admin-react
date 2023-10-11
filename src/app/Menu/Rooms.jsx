@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import RoomModal from "../../components/Modal/RoomModal";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import debounce from "lodash.debounce";
 
 function Rooms() {
   const [rooms, setRooms] = useState([]);
@@ -12,8 +15,17 @@ function Rooms() {
     id_tipe_kamar: "",
     tersedia: "",
   });
+  const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState(""); // State variable for search input
+  const debouncedSearch = debounce((query) => setSearchQuery(query));
 
   useEffect(() => {
+    const role = Cookies.get("role");
+
+    if (role !== "Admin") {
+      navigate("/404");
+    }
     // Fetch rooms from your API
     axios.get("http://localhost:8000/kamar").then((response) => {
       setRooms(response.data);
@@ -39,9 +51,7 @@ function Rooms() {
     // Send a DELETE request to your API
     axios.delete(`http://localhost:8000/kamar/${id}`).then(() => {
       // Update the rooms list after deleting
-      setRooms((prevRooms) =>
-        prevRooms.filter((rooms) => rooms.id !== id)
-      );
+      setRooms((prevRooms) => prevRooms.filter((rooms) => rooms.id !== id));
     });
   };
 
@@ -106,6 +116,15 @@ function Rooms() {
       <main className="flex-1 p-4">
         <div className="container mx-auto p-4">
           <div className="overflow-x-auto">
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Enter your field"
+                value={searchQuery}
+                onChange={(e) => debouncedSearch(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-1/2"
+              />
+            </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -128,9 +147,16 @@ function Rooms() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {rooms.map((rooms) => (
-                  <TableRow key={rooms.id} data={rooms} />
-                ))}
+                {rooms
+                  .filter((room) =>
+                    Object.values(room)
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )
+                  .map((room) => (
+                    <TableRow key={room.id} data={room} />
+                  ))}
               </tbody>
             </table>
           </div>
