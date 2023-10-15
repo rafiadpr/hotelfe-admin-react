@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Eye, EyeOff } from "react-feather";
 import axios from "axios";
-import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Cookies from "js-cookie";
 import { BeatLoader } from "react-spinners";
@@ -35,21 +34,6 @@ const Login = () => {
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
-  };
-
-  const handleLoginFailed = () => {
-    Swal.fire({
-      icon: "error",
-      title: "Login Gagal",
-      text: "Email atau password yang Anda masukkan salah",
-    });
-  };
-
-  const handleLogin = () => {
-    Swal.fire({
-      icon: "success",
-      title: "Login Berhasil",
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -91,34 +75,6 @@ const Login = () => {
     } catch (error) {
       console.log(error);
     }
-
-    // try {
-    //   const response = await axios.post("http://localhost:8000/auth/login", {
-    //     email,
-    //     password,
-    //   });
-    //   console.log(response.data);
-
-    //   if (response.data.logged) {
-    //     localStorage.setItem("logged", response.data.logged);
-    //     localStorage.setItem("user", JSON.stringify(response.data.data));
-    //     localStorage.setItem("token", response.data.token);
-
-    //     if (response.data.data.role === "Admin") {
-    //       navigate("/HomeAdmin"); // Use navigate to navigate to the Admin page
-    //     } else if (response.data.data.role === "Resepsionis") {
-    //       navigate("/ResepsionisResepsionis"); // Use navigate to navigate to the Resepsionis page
-    //     }
-
-    //     handleLogin();
-    //   } else {
-    //     console.log("LOGIN GAGAL");
-    //     handleLoginFailed();
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    //   handleLoginFailed();
-    // }
   };
 
   return (

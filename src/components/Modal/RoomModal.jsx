@@ -50,8 +50,8 @@ function RoomModal({
                 onChange={handleChange}
               >
                 <option value="">Select Status</option>
-                <option value="Admin">Tersedia</option>
-                <option value="Resepsionis">Tidak Tersedia</option>
+                <option value="Tersedia">Tersedia</option>
+                <option value="Tidak Tersedia">Tidak Tersedia</option>
               </select>
             </div>
             <div className="mb-4">

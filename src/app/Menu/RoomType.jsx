@@ -105,33 +105,29 @@ function RoomType() {
 
   const TableRow = ({ data }) => (
     <tr key={data.id}>
-      {Object.keys(data).map((key, index) => {
-        if (key === "foto") {
-          // Render the image if the key is 'foto'
-          return (
-            <td key={index} className="px-6 py-4 whitespace-nowrap">
-              <img
-                src={`http://localhost:8000/tipekamar/uploads/${data[key]}`} // Adjust the image path based on your backend
-                alt={data[key]}
-                width="100" // Adjust the width as needed
-              />
-            </td>
-          );
-        } else {
-          return (
-            <td key={index} className="px-6 py-4 whitespace-nowrap">
-              {data[key]}
-            </td>
-          );
-        }
-      })}
+      {Object.keys(data)
+        .filter((key) => key !== "createdAt" && key !== "updatedAt")
+        .map((key, index) => {
+          if (key === "foto") {
+            // Render the image if the key is 'foto'
+            return (
+              <td key={index} className="px-6 py-4 whitespace-nowrap">
+                <img
+                  src={`http://localhost:8000/tipekamar/uploads/${data[key]}`} // Adjust the image path based on your backend
+                  alt={data[key]}
+                  width="100" // Adjust the width as needed
+                />
+              </td>
+            );
+          } else {
+            return (
+              <td key={index} className="px-6 py-4 whitespace-nowrap">
+                {data[key]}
+              </td>
+            );
+          }
+        })}
       <td className="px-6 py-4 whitespace-nowrap">
-        <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2"
-          onClick={handleCreateClick}
-        >
-          Create
-        </button>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
           onClick={() => handleEditClick(data)}
@@ -162,20 +158,30 @@ function RoomType() {
                 onChange={(e) => debouncedSearch(e.target.value)}
                 className="border border-gray-300 rounded px-3 py-2 w-1/2"
               />
+              <button
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2"
+                onClick={handleCreateClick}
+              >
+                Create
+              </button>
             </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
                   {roomType.length > 0 &&
-                    Object.keys(roomType[0]).map((header, index) => (
-                      <th
-                        key={index}
-                        scope="col"
-                        className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {header}
-                      </th>
-                    ))}
+                    Object.keys(roomType[0])
+                      .filter(
+                        (key) => key !== "createdAt" && key !== "updatedAt"
+                      )
+                      .map((header, index) => (
+                        <th
+                          key={index}
+                          scope="col"
+                          className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header}
+                        </th>
+                      ))}
                   <th
                     scope="col"
                     className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -185,7 +191,7 @@ function RoomType() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-              {roomType
+                {roomType
                   .filter((roomType) =>
                     Object.values(roomType)
                       .join(" ")

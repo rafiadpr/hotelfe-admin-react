@@ -32,7 +32,7 @@ function Reservations() {
       },
     ],
   });
-  const [searchQuery, setSearchQuery] = useState(""); // State variable for search input
+  const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = debounce((query) => setSearchQuery(query));
 
   useEffect(() => {
@@ -45,16 +45,6 @@ function Reservations() {
   const handleEditClick = (reservation) => {
     setFormData(reservation);
     setModalIsOpen(true);
-  };
-
-  const handleDeleteClick = (id) => {
-    // Send a DELETE request to your API
-    axios.delete(`http://localhost:8000/pemesanan/${id}`).then(() => {
-      // Update the reservations list after deleting
-      setReservations((prevReservations) =>
-        prevReservations.filter((reservation) => reservation.id !== id)
-      );
-    });
   };
 
   const handleSubmit = () => {
@@ -102,11 +92,13 @@ function Reservations() {
   const TableRow = ({ data }) => {
     return (
       <tr key={data.id}>
-        {Object.keys(data).map((key, index) => (
-          <td key={index} className="px-6 py-4 whitespace-nowrap">
-            {data[key]}
-          </td>
-        ))}
+        {Object.keys(data)
+          .filter((key) => key !== "createdAt" && key !== "updatedAt")
+          .map((key, index) => (
+            <td key={index} className="px-6 py-4 whitespace-nowrap">
+              {data[key]}
+            </td>
+          ))}
         <td className="px-6 py-4 whitespace-nowrap">
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mr-2"
@@ -119,12 +111,6 @@ function Reservations() {
             onClick={() => handleEditClick(data)}
           >
             Edit
-          </button>
-          <button
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md"
-            onClick={() => handleDeleteClick(data.id)}
-          >
-            Delete
           </button>
         </td>
       </tr>
@@ -150,15 +136,17 @@ function Reservations() {
               <thead>
                 <tr>
                   {reservations.length > 0 &&
-                    Object.keys(reservations[0]).map((header, index) => (
-                      <th
-                        key={index}
-                        scope="col"
-                        className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {header}
-                      </th>
-                    ))}
+                    Object.keys(reservations[0])
+                      .filter((key) => key !== "createdAt" && key !== "updatedAt")
+                      .map((header, index) => (
+                        <th
+                          key={index}
+                          scope="col"
+                          className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header}
+                        </th>
+                      ))}
                   <th
                     scope="col"
                     className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
